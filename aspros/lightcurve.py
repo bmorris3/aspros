@@ -8,6 +8,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from astropy.io import fits
 from astropy.time import Time
+from astropy.timeseries import BoxLeastSquares
 import astropy.units as u
 import os
 import numpy as np
@@ -62,8 +63,8 @@ class LightCurve(object):
         phase[phase > 0.5] -= 1.0
         return phase
 
-    def plot(self, transit_params=None, ax=None, quarter=None, show=True,
-             phase=False, plot_kwargs={'color': 'b', 'marker': 'o', 'lw': 0}):
+    def plot(self, transit_params=None, ax=None, quarter=None, show=False,
+             phase=False, **kwargs):
         """
         Plot light curve.
 
@@ -102,8 +103,11 @@ class LightCurve(object):
         else:
             x = self.times.jd
 
-        ax.plot(x[mask], self.fluxes[mask],
-                **plot_kwargs)
+        if len(kwargs) == 0:
+            kwargs = {'color': 'k', 'marker': 'o', 'ls': 'none', 'ecolor': 'k'}
+
+        ax.errorbar(x[mask], self.fluxes[mask], self.errors[mask],
+                    **kwargs)
         ax.set(xlabel='Time' if not phase else 'Phase',
                ylabel='Flux', title=self.name)
 
@@ -416,6 +420,13 @@ class LightCurve(object):
                 LightCurve(times=self.times[index:], fluxes=self.fluxes[index:],
                            errors=self.errors[index:], quarters=self.quarters[index:],
                            name=self.name))
+
+    def bls(self, duration):
+        bls = BoxLeastSquares(self.times, self.fluxes, self.errors)
+
+        results = bls.autopower(duration)
+
+        return results
 
 
 class TransitLightCurve(LightCurve):

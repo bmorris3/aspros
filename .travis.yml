@@ -93,7 +93,7 @@ matrix:
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - os: linux
-          env: SETUP_CMD='build_docs -w'
+          env: SETUP_CMD='build_docs'
                CONDA_DEPENDENCIES=$CONDA_DEPENDENCIES_DOC
 
         # Do a PEP8 test with flake8
