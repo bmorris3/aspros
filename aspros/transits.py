@@ -44,7 +44,8 @@ def inject_transits(lc, period, epoch, radius, inc, rstar=1*R_earth, a=None):
     p.u = [0.4, 0.2]
     p.limb_dark = 'quadratic'
 
-    model = TransitModel(p, lc.times.jd).light_curve(p)
+    model = TransitModel(p, lc.times.jd, supersample_factor=10,
+                         exp_time=(60*u.s).to(u.day).value).light_curve(p)
 
     new_lc = LightCurve(lc.times, lc.fluxes * model, lc.errors)
     return new_lc

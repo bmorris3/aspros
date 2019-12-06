@@ -421,10 +421,10 @@ class LightCurve(object):
                            errors=self.errors[index:], quarters=self.quarters[index:],
                            name=self.name))
 
-    def bls(self, duration):
+    def bls(self, periods, duration):
         bls = BoxLeastSquares(self.times, self.fluxes, self.errors)
 
-        results = bls.autopower(duration)
+        results = bls.power(periods, duration)
 
         return results
 

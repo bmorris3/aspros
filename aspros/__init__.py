@@ -29,3 +29,4 @@ if not _ASTROPY_SETUP_:   # noqa
     from .lightcurve import *  # noqa
     from .cheops import *  # noqa
     from .transits import *  # noqa
+    from .blsutils import *  # noqa
