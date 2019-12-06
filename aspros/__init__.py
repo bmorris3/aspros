@@ -13,8 +13,7 @@ from distutils.version import LooseVersion
 
 __minimum_python_version__ = "3.5"
 
-__all__ = []
-
+# __all__ = []
 
 class UnsupportedPythonError(Exception):
     pass
@@ -26,8 +25,4 @@ if LooseVersion(sys.version) < LooseVersion(__minimum_python_version__):
 
 if not _ASTROPY_SETUP_:   # noqa
     # For egg_info test builds to pass, put package imports here.
-    from .example_mod import *   # noqa
-    # Then you can be explicit to control what ends up in the namespace,
-    __all__ += ['do_primes']   # noqa
-    # or you can keep everything from the subpackage with the following instead
-    # __all__ += example_mod.__all__
+    from .lightcurve import *   # noqa
