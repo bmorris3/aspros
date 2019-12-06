@@ -422,11 +422,30 @@ class LightCurve(object):
                            name=self.name))
 
     def bls(self, periods, duration):
+        """
+        Compute Box Least Squares periodogram
+
+        Parameters
+        ----------
+        periods : `~numpy.ndarray`
+        duration: `~astropy.units.Quantity`
+
+        Returns
+        -------
+        results : `~astropy.timeseries.BoxLeastSquaresResults`
+
+        bests : list
+
+        stats : dict
+        """
         bls = BoxLeastSquares(self.times, self.fluxes, self.errors)
 
         results = bls.power(periods, duration)
-
-        return results
+        period = results.period[results.power.argmax()]
+        transit_time = self.times[self.fluxes.argmin()]
+        bests = [period, duration, transit_time]
+        stats = bls.compute_stats(period, duration, transit_time)
+        return results, bests, stats
 
 
 class TransitLightCurve(LightCurve):
