@@ -8,6 +8,9 @@ aspros
 .. image:: https://travis-ci.com/bmorris3/aspros.svg?branch=master
     :target: https://travis-ci.com/bmorris3/aspros
 
+.. image:: https://readthedocs.org/projects/aspros/badge/?version=latest
+    :target: https://aspros.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 άσπρος: White dwarf planetesimal hunt with CHEOPS.
 

@@ -99,7 +99,7 @@ matrix:
         # Do a PEP8 test with flake8
         - os: linux
           stage: Initial tests
-          env: MAIN_CMD='--max-line-length=100 $FLAKE8_OPT' SETUP_CMD=''
+          env: MAIN_CMD='flake8 aspros --max-line-length=100 $FLAKE8_OPT' SETUP_CMD=''
 
     allow_failures:
         # Do a PEP8 test with flake8
