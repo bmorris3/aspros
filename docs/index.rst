@@ -1,7 +1,7 @@
 aspros
 ======
 
-White dwarf planetesimal hunt with CHEOPS.
+άσπρος: White dwarf planetesimal hunt with CHEOPS.
 
 .. toctree::
   :maxdepth: 2

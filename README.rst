@@ -9,7 +9,7 @@ aspros
     :target: https://travis-ci.com/bmorris3/aspros
 
 
-White dwarf planetesimal hunt with CHEOPS.
+άσπρος: White dwarf planetesimal hunt with CHEOPS.
 
 
 License

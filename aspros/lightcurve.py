@@ -14,7 +14,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import shutil
 
-
 __all__ = ['LightCurve', 'TransitLightCurve',
            'concatenate_transit_light_curves', 'concatenate_light_curves']
 
@@ -23,6 +22,7 @@ class LightCurve(object):
     """
     Container object for light curves.
     """
+
     def __init__(self, times=None, fluxes=None, errors=None, quarters=None,
                  name=None):
         """
@@ -58,12 +58,12 @@ class LightCurve(object):
         self.name = name
 
     def phases(self, params):
-        phase = ((self.times.jd - params.t0) % params.per)/params.per
+        phase = ((self.times.jd - params.t0) % params.per) / params.per
         phase[phase > 0.5] -= 1.0
         return phase
 
     def plot(self, transit_params=None, ax=None, quarter=None, show=True,
-             phase=False, plot_kwargs={'color':'b', 'marker':'o', 'lw':0}):
+             phase=False, plot_kwargs={'color': 'b', 'marker': 'o', 'lw': 0}):
         """
         Plot light curve.
 
@@ -97,7 +97,7 @@ class LightCurve(object):
             ax = plt.gca()
 
         if phase:
-            x = (self.times.jd - transit_params.t0)/transit_params.per % 1
+            x = (self.times.jd - transit_params.t0) / transit_params.per % 1
             x[x > 0.5] -= 1
         else:
             x = self.times.jd
@@ -136,7 +136,7 @@ class LightCurve(object):
                                         dtype=float)
                 for i, attr in enumerate(attrs):
                     output_array[:, i] = getattr(self, attr)
-                np.savetxt(os.path.join(path, dirname+'.txt'), output_array)
+                np.savetxt(os.path.join(path, dirname + '.txt'), output_array)
 
     @classmethod
     def from_raw_fits(cls, fits_paths, name=None):
@@ -160,17 +160,13 @@ class LightCurve(object):
         times = []
         quarter = []
 
-        # Manual on times: http://archive.stsci.edu/kepler/manuals/archive_manual.htm
-
         for path in fits_paths:
             data = fits.getdata(path)
             header = fits.getheader(path)
-            timslice = fits.open(path)[1].header['TIMSLICE']
-            time_slice_correction = (0.25 + 0.62*(5.0 - timslice))/86400
-            times.append(data['TIME'] + 2454833.0)# - data['TIMECORR'] + time_slice_correction)
+            times.append(data['TIME'] + 2454833.0)
             errors.append(data['SAP_FLUX_ERR'])
             fluxes.append(data['SAP_FLUX'])
-            quarter.append(len(data['TIME'])*[header['QUARTER']])
+            quarter.append(len(data['TIME']) * [header['QUARTER']])
 
         times, fluxes, errors, quarter = [np.concatenate(i)
                                           for i in [times, fluxes,
@@ -181,7 +177,8 @@ class LightCurve(object):
             mask_nans |= np.isnan(attr)
 
         times, fluxes, errors, quarter = [attr[~mask_nans]
-                                           for attr in [times, fluxes, errors, quarter]]
+                                          for attr in
+                                          [times, fluxes, errors, quarter]]
 
         return LightCurve(times, fluxes, errors, quarters=quarter, name=name)
 
@@ -189,8 +186,9 @@ class LightCurve(object):
     def from_dir(cls, path, for_stsp=False):
         """Load light curve from numpy save files in ``dir``"""
         if not for_stsp:
-            times, fluxes, errors, quarters = [np.loadtxt(os.path.join(path, '{0}.txt'.format(attr)))
-                                               for attr in ['times_jd', 'fluxes', 'errors', 'quarters']]
+            times, fluxes, errors, quarters = [
+                np.loadtxt(os.path.join(path, '{0}.txt'.format(attr)))
+                for attr in ['times_jd', 'fluxes', 'errors', 'quarters']]
         else:
             quarters = None
             times, fluxes, errors = np.loadtxt(path, unpack=True)
@@ -226,7 +224,8 @@ class LightCurve(object):
         for quarter_mask in quarter_masks:
 
             polynomial = np.polyfit(self.times[quarter_mask].jd,
-                                    self.fluxes[quarter_mask], polynomial_order)
+                                    self.fluxes[quarter_mask],
+                                    polynomial_order)
             scaling_term = np.polyval(polynomial, self.times[quarter_mask].jd)
             self.fluxes[quarter_mask] /= scaling_term
             self.errors[quarter_mask] /= scaling_term
@@ -241,11 +240,11 @@ class LightCurve(object):
     def delete_outliers(self):
 
         d = np.diff(self.fluxes)
-        spikey = np.abs(d - np.median(d)) > 2.5*np.std(d)
+        spikey = np.abs(d - np.median(d)) > 2.5 * np.std(d)
         neighboring_spikes = spikey[1:] & spikey[:-1]
         opposite_signs = np.sign(d[1:]) != np.sign(d[:-1])
         outliers = np.argwhere(neighboring_spikes & opposite_signs) + 1
-        #print('number bad fluxes: {0}'.format(len(outliers)))
+        # print('number bad fluxes: {0}'.format(len(outliers)))
 
         self.times = Time(np.delete(self.times.jd, outliers), format='jd')
         self.fluxes = np.delete(self.fluxes, outliers)
@@ -276,8 +275,10 @@ class LightCurve(object):
         # Fraction of one duration to capture out of transit
 
         phased = (self.times.jd - params.t0) % params.per
-        near_transit = ((phased < params.duration*(0.5 + oot_duration_fraction)) |
-                        (phased > params.per - params.duration*(0.5 + oot_duration_fraction)))
+        near_transit = ((phased < params.duration * (
+                    0.5 + oot_duration_fraction)) |
+                        (phased > params.per - params.duration * (
+                                    0.5 + oot_duration_fraction)))
         if flip:
             near_transit = ~near_transit
         sort_by_time = np.argsort(self.times[near_transit].jd)
@@ -327,14 +328,14 @@ class LightCurve(object):
             List of `TransitLightCurve` objects
         """
         time_diffs = np.diff(sorted(self.times.jd))
-        diff_between_transits = params.per/2.
+        diff_between_transits = params.per / 2.
         split_inds = np.argwhere(time_diffs > diff_between_transits) + 1
 
         if len(split_inds) > 0:
 
             split_ind_pairs = [[0, split_inds[0][0]]]
-            split_ind_pairs.extend([[split_inds[i][0], split_inds[i+1][0]]
-                                     for i in range(len(split_inds)-1)])
+            split_ind_pairs.extend([[split_inds[i][0], split_inds[i + 1][0]]
+                                    for i in range(len(split_inds) - 1)])
             split_ind_pairs.extend([[split_inds[-1], len(self.times)]])
 
             transit_light_curves = []
@@ -344,7 +345,7 @@ class LightCurve(object):
                 if plots:
                     plt.plot(self.times.jd[start_ind:end_ind],
                              self.fluxes[start_ind:end_ind], '.-')
-                #print(start_ind, end_ind)
+                # print(start_ind, end_ind)
                 if type(start_ind) is list or type(start_ind) is np.ndarray:
                     start_ind = start_ind[0]
                 parameters = dict(times=self.times[start_ind:end_ind],
@@ -416,26 +417,12 @@ class LightCurve(object):
                            errors=self.errors[index:], quarters=self.quarters[index:],
                            name=self.name))
 
-    def transit_model(self, transit_params, short_cadence=True):
-        # (1 * u.min).to(u.day).value
-        if short_cadence:
-            exp_time = (1 * u.min).to(u.day).value #(6.019802903 * 10 * u.s).to(u.day).value
-            supersample = 10
-        else:
-            exp_time = (6.019802903 * 10 * 30 * u.s).to(u.day).value
-            supersample = 10
-
-        m = batman.TransitModel(transit_params, self.times.jd,
-                                supersample_factor=supersample,
-                                exp_time=exp_time)
-        model_flux = m.light_curve(transit_params)
-        return model_flux
-
 
 class TransitLightCurve(LightCurve):
     """
     Container for a single transit light curve. Subclass of `LightCurve`.
     """
+
     def __init__(self, times=None, fluxes=None, errors=None, quarters=None,
                  name=None):
         """
@@ -466,7 +453,7 @@ class TransitLightCurve(LightCurve):
         self.name = name
         self.rescaled = False
 
-    def fit_linear_baseline(self, params, cadence=1*u.min,
+    def fit_linear_baseline(self, params, cadence=1 * u.min,
                             return_near_transit=False, plots=False):
         """
         Find OOT portions of transit light curve using similar method to
@@ -504,7 +491,7 @@ class TransitLightCurve(LightCurve):
         linear_baseline_fit = np.polyval(linear_baseline, self.times.jd)
 
         if plots:
-            fig, ax = plt.subplots(1, 2, figsize=(15,6))
+            fig, ax = plt.subplots(1, 2, figsize=(15, 6))
             ax[0].axhline(1, ls='--', color='k')
             ax[0].plot(self.times.jd, linear_baseline_fit, 'r')
             ax[0].plot(self.times.jd, self.fluxes, 'bo')
@@ -515,7 +502,7 @@ class TransitLightCurve(LightCurve):
         else:
             return linear_baseline
 
-    def remove_linear_baseline(self, params, plots=False, cadence=1*u.min):
+    def remove_linear_baseline(self, params, plots=False, cadence=1 * u.min):
         """
         Find OOT portions of transit light curve using similar method to
         `LightCurve.mask_out_of_transit`, fit linear baseline to OOT,
@@ -536,11 +523,11 @@ class TransitLightCurve(LightCurve):
                                                                  cadence=cadence,
                                                                  return_near_transit=True)
         linear_baseline_fit = np.polyval(linear_baseline, self.times.jd)
-        self.fluxes =  self.fluxes/linear_baseline_fit
-        self.errors = self.errors/linear_baseline_fit
+        self.fluxes = self.fluxes / linear_baseline_fit
+        self.errors = self.errors / linear_baseline_fit
 
         if plots:
-            fig, ax = plt.subplots(1, 2, figsize=(15,6))
+            fig, ax = plt.subplots(1, 2, figsize=(15, 6))
             ax[0].axhline(1, ls='--', color='k')
             ax[0].plot(self.times.jd, self.fluxes, 'o')
             ax[0].set_title('before trend removal')
@@ -557,8 +544,7 @@ class TransitLightCurve(LightCurve):
             self.errors *= scaling_vector
             self.rescaled = True
 
-
-    def fit_polynomial_baseline(self, params, order=2, cadence=1*u.min,
+    def fit_polynomial_baseline(self, params, order=2, cadence=1 * u.min,
                                 plots=False, mask=None):
         """
         Find OOT portions of transit light curve using similar method to
@@ -569,18 +555,23 @@ class TransitLightCurve(LightCurve):
         cadence_buffer = cadence.to(u.day).value
         get_oot_duration_fraction = 0
         phased = (self.times.jd[mask] - params.t0) % params.per
-        near_transit = ((phased < params.duration*(0.5 + get_oot_duration_fraction) + cadence_buffer) |
-                        (phased > params.per - params.duration*(0.5 + get_oot_duration_fraction) - cadence_buffer))
+        near_transit = ((phased < params.duration * (
+                    0.5 + get_oot_duration_fraction) + cadence_buffer) |
+                        (phased > params.per - params.duration * (
+                                    0.5 + get_oot_duration_fraction) -
+                         cadence_buffer))
 
         # Remove polynomial baseline trend after subtracting the times by its
         # mean -- this improves numerical stability for polyfit
         downscaled_times = self.times.jd - self.times.jd.mean()
         polynomial_baseline = np.polyfit(downscaled_times[mask][~near_transit],
-                                         self.fluxes[mask][~near_transit], order)
-        polynomial_baseline_fit = np.polyval(polynomial_baseline, downscaled_times)
+                                         self.fluxes[mask][~near_transit],
+                                         order)
+        polynomial_baseline_fit = np.polyval(polynomial_baseline,
+                                             downscaled_times)
 
         if plots:
-            fig, ax = plt.subplots(1, 2, figsize=(15,6))
+            fig, ax = plt.subplots(1, 2, figsize=(15, 6))
             ax[0].axhline(1, ls='--', color='k')
             ax[0].plot(self.times.jd, polynomial_baseline_fit, 'r')
             ax[0].plot(self.times.jd, self.fluxes, 'bo')
@@ -591,7 +582,7 @@ class TransitLightCurve(LightCurve):
         return polynomial_baseline_fit
 
     def subtract_polynomial_baseline(self, params, plots=False, order=2,
-                                     cadence=1*u.min):
+                                     cadence=1 * u.min):
         """
         Find OOT portions of transit light curve using similar method to
         `LightCurve.mask_out_of_transit`, fit polynomial baseline to OOT,
@@ -605,10 +596,9 @@ class TransitLightCurve(LightCurve):
         self.errors = self.errors
 
         if plots:
-            fig, ax = plt.subplots(1, 2, figsize=(15,6))
+            fig, ax = plt.subplots(1, 2, figsize=(15, 6))
             ax[0].axhline(1, ls='--', color='k')
             ax[0].plot(self.times.jd, self.fluxes, 'o')
-            #ax[0].plot(self.times.jd[near_transit], self.fluxes[near_transit], 'ro')
             ax[0].set_title('before trend removal')
 
             ax[1].set_title('after trend removal')
@@ -617,7 +607,7 @@ class TransitLightCurve(LightCurve):
             plt.show()
 
     def remove_polynomial_baseline(self, params, plots=False, order=2,
-                                   cadence=1*u.min):
+                                   cadence=1 * u.min):
         """
         Find OOT portions of transit light curve using similar method to
         `LightCurve.mask_out_of_transit`, fit polynomial baseline to OOT,
@@ -631,10 +621,9 @@ class TransitLightCurve(LightCurve):
         self.errors = self.errors
 
         if plots:
-            fig, ax = plt.subplots(1, 2, figsize=(15,6))
+            fig, ax = plt.subplots(1, 2, figsize=(15, 6))
             ax[0].axhline(1, ls='--', color='k')
             ax[0].plot(self.times.jd, self.fluxes, 'o')
-            #ax[0].plot(self.times.jd[near_transit], self.fluxes[near_transit], 'ro')
             ax[0].set_title('before trend removal')
 
             ax[1].set_title('after trend removal')
@@ -642,48 +631,12 @@ class TransitLightCurve(LightCurve):
             ax[1].plot(self.times.jd, self.fluxes, 'o')
             plt.show()
 
-
-
-    def subtract_add_divide_without_outliers(self, params, quarterly_max,
-                                             order=2, cadence=1*u.min,
-                                             outlier_error_multiplier=50,
-                                             outlier_tolerance_depth_factor=0.20,
-                                             plots=False):
-
-        init_baseline_fit = self.fit_polynomial_baseline(order=order,
-                                                         cadence=cadence,
-                                                         params=params)
-
-        # Subtract out a transit model
-        transit_model = generate_lc_depth(self.times_jd, params.rp**2, params)
-
-        lower_outliers = (transit_model*init_baseline_fit - self.fluxes >
-                          self.fluxes.mean() * outlier_tolerance_depth_factor *
-                          params.rp**2)
-
-        self.errors[lower_outliers] *= outlier_error_multiplier
-
-        final_baseline_fit = self.fit_polynomial_baseline(order=order,
-                                                          cadence=cadence,
-                                                          params=params,
-                                                          mask=~lower_outliers)
-
-        self.fluxes = self.fluxes - final_baseline_fit
-        self.fluxes += quarterly_max
-        self.fluxes /= quarterly_max
-        self.errors /= quarterly_max
-
-        if plots:
-            plt.errorbar(self.times.jd, self.fluxes, self.errors, fmt='o')
-            plt.plot(self.times.jd[lower_outliers],
-                     self.fluxes[lower_outliers], 'rx')
-            plt.show()
-
     @classmethod
     def from_dir(cls, path):
         """Load light curve from numpy save files in ``path``"""
-        times, fluxes, errors, quarters = [np.loadtxt(os.path.join(path, '{0}.txt'.format(attr)))
-                                           for attr in ['times_jd', 'fluxes', 'errors', 'quarters']]
+        times, fluxes, errors, quarters = [
+            np.loadtxt(os.path.join(path, '{0}.txt'.format(attr)))
+            for attr in ['times_jd', 'fluxes', 'errors', 'quarters']]
 
         if os.sep in path:
             name = path.split(os.sep)[-1]
@@ -724,6 +677,7 @@ def concatenate_transit_light_curves(light_curve_list, name=None):
     times = Time(times, format='jd')
     return TransitLightCurve(times=times, fluxes=fluxes, errors=errors,
                              quarters=quarters, name=name)
+
 
 def concatenate_light_curves(light_curve_list, name=None):
     """
