@@ -104,7 +104,8 @@ class LightCurve(object):
             x = self.times.jd
 
         if len(kwargs) == 0:
-            kwargs = {'color': 'k', 'marker': 'o', 'ls': 'none', 'ecolor': 'k'}
+            kwargs = {'color': 'k', 'marker': '.', 'ls': 'none',
+                      'ecolor': 'silver'}
 
         ax.errorbar(x[mask], self.fluxes[mask], self.errors[mask],
                     **kwargs)

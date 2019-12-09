@@ -18,7 +18,9 @@ Simulate a light curve with CHEOPS-like noise and window function:
 .. code-block:: python
 
     seed = 42  # Makes random number generator reproducible
-    clean_lc = simulate_lc(24*u.hour, efficiency=0.6, seed=seed)
+    duration = 24 * u.hour
+    efficiency = 0.6
+    clean_lc = simulate_lc(duration, efficiency=efficiency, seed=seed)
 
 Inject a transiting object with specified orbital properties:
 
@@ -35,7 +37,8 @@ Construct a Box Least Squares periodogram and inspect it for peaks:
 
 .. code-block:: python
 
-    results = transit_lc.bls(duration=2*u.min)
+    periods = np.linspace(2, 12, 1500) * u.hour
+    results, bests, stats = transit_lc.bls(periods=periods, duration=2*u.min)
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 2))
     transit_lc.plot(ax=ax[0])
@@ -62,10 +65,8 @@ Construct a Box Least Squares periodogram and inspect it for peaks:
     inc = 90 * u.deg
 
     transit_lc = inject_transits(clean_lc, period, epoch, radius, inc)
-
-    # transit_lc.plot()
-
-    results = transit_lc.bls(duration=2*u.min)
+    periods = np.linspace(2, 12, 1500) * u.hour
+    results, bests, stats = transit_lc.bls(periods=periods, duration=2*u.min)
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 2))
     transit_lc.plot(ax=ax[0])

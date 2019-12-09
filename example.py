@@ -21,6 +21,7 @@ results, bests, stats = transit_lc.bls(periods=periods,
                                        duration=transit_duration)
 best_period, best_duration, best_epoch = bests
 
+# Plot results
 fig, ax = plt.subplots(1, 3, figsize=(10, 4))
 transit_lc.plot(ax=ax[0])
 
@@ -42,6 +43,22 @@ ax[2].errorbar(phases, transit_lc.fluxes, transit_lc.errors, color='k',
                fmt='.', ecolor='silver')
 ax[2].set_xlim([-0.02, 0.02])
 ax[2].set(xlabel='Phase', ylabel='Flux')
+ax[2].axvspan(-0.001, 0.001, color='k', alpha=0.1)
+
+ax[0].set_title('Period = {0:.2f}; Radius = {1:.0f}'.format(period, radius))
+ax[1].set_title('Peak height ratio = {0:.1f}'.format(significance))
+# ax[2].set_title('Depth = {0:.2f}'
+#                 .format(np.median(transit_lc.fluxes) -
+#                         transit_lc.fluxes.min()))
+
+intransit = np.abs(phases) < 0.0015
+flux_intransit = np.median(transit_lc.fluxes[intransit])
+flux_oot = np.median(transit_lc.fluxes)
+
+snr = ((flux_oot - flux_intransit) / (np.median(transit_lc.errors) /
+                                      np.count_nonzero(intransit)**0.5))
+
+ax[2].set_title('S/N = {0:.1f}'.format(snr))
 
 fig.tight_layout()
 plt.show()
